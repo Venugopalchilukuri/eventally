@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import type { Event } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import EventCard from "@/components/EventCard";
+import RecommendedEvents from "@/components/RecommendedEvents";
 
 // Category emoji mapping
 const categoryEmojis: Record<string, string> = {
@@ -241,6 +242,11 @@ export default function EventsPage() {
             ))}
           </div>
         )}
+
+        {/* Smart Recommendations */}
+        <div className="mt-16">
+          <RecommendedEvents />
+        </div>
       </div>
     </div>
   );

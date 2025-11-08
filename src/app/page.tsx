@@ -3,61 +3,54 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Event } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
-import EventCard from "@/components/EventCard";
+import RecommendedEvents from "@/components/RecommendedEvents";
 
 export default function Home() {
-  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
-  const [trendingEvents, setTrendingEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Real stats from database
+  const [stats, setStats] = useState({
+    totalEvents: 0,
+    totalUsers: 0,
+    satisfactionRate: 0
+  });
 
   useEffect(() => {
-    fetchEvents();
+    fetchStats();
   }, []);
 
-  async function fetchEvents() {
+  async function fetchStats() {
     try {
-      // Get upcoming featured events
-      const today = new Date().toISOString().split('T')[0];
-      const { data: featured } = await supabase
+      // Get total events count
+      const { count: eventsCount } = await supabase
         .from('events')
-        .select('*')
-        .gte('date', today)
-        .order('date', { ascending: true })
-        .limit(6);
+        .select('*', { count: 'exact', head: true });
 
-      // Get trending events (most attendees, with at least 1 attendee)
-      const { data: trendingWithAttendees } = await supabase
+      // Get total users count
+      const { count: usersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Calculate satisfaction rate (events with registrations / total events)
+      const { count: eventsWithRegistrations } = await supabase
         .from('events')
-        .select('*')
-        .gte('date', today)
-        .gt('current_attendees', 0)
-        .order('current_attendees', { ascending: false })
-        .limit(3);
+        .select('*', { count: 'exact', head: true })
+        .gt('current_attendees', 0);
 
-      // If no trending events with attendees, get most recent events (excluding featured)
-      let trending = trendingWithAttendees || [];
-      if (trending.length === 0) {
-        const featuredIds = (featured || []).map(e => e.id);
-        const { data: recentEvents } = await supabase
-          .from('events')
-          .select('*')
-          .gte('date', today)
-          .not('id', 'in', `(${featuredIds.length > 0 ? featuredIds.join(',') : "''"})`)
-          .order('created_at', { ascending: false })
-          .limit(3);
-        trending = recentEvents || [];
-      }
+      const satisfactionRate = eventsCount && eventsCount > 0
+        ? Math.round((eventsWithRegistrations || 0) / eventsCount * 100)
+        : 0;
 
-      setFeaturedEvents(featured || []);
-      setTrendingEvents(trending);
+      setStats({
+        totalEvents: eventsCount || 0,
+        totalUsers: usersCount || 0,
+        satisfactionRate: satisfactionRate
+      });
     } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching stats:', error);
     }
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Navbar />
@@ -139,82 +132,31 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Featured Events Section */}
+        {/* Personalized Recommendations / Trending Events */}
         <div className="mt-32">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              🔥 Discover Events
-            </h2>
-            <Link 
-              href="/events"
-              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 font-semibold flex items-center gap-2"
-            >
-              View All
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-300">Loading events...</p>
-            </div>
-          ) : featuredEvents.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredEvents.map((event) => (
-                <EventCard key={event.id} event={event} onUpdate={fetchEvents} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-              <p className="text-xl text-gray-600 dark:text-gray-300 mb-4">
-                No upcoming events yet
-              </p>
-              <Link
-                href="/create"
-                className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-              >
-                Create First Event
-              </Link>
-            </div>
-          )}
+          <RecommendedEvents />
         </div>
 
-        {/* Trending Events Section */}
-        {!loading && trendingEvents.length > 0 && (
-          <div className="mt-20">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-              📈 Trending Now
-            </h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {trendingEvents.map((event, index) => (
-                <div key={event.id} className="relative">
-                  <div className="absolute -top-3 -left-3 w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg z-10">
-                    {index + 1}
-                  </div>
-                  <EventCard event={event} onUpdate={fetchEvents} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Stats Section */}
+        {/* Stats Section - Real Data */}
         <div className="mt-32 bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl p-12 text-white">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold mb-2">10K+</div>
+              <div className="text-4xl font-bold mb-2">
+                {stats.totalEvents > 0 ? `${stats.totalEvents}+` : '0'}
+              </div>
               <div className="text-purple-100">Events Created</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">50K+</div>
+              <div className="text-4xl font-bold mb-2">
+                {stats.totalUsers > 0 ? `${stats.totalUsers}+` : '0'}
+              </div>
               <div className="text-purple-100">Active Users</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">98%</div>
-              <div className="text-purple-100">Satisfaction Rate</div>
+              <div className="text-4xl font-bold mb-2">
+                {stats.satisfactionRate}%
+              </div>
+              <div className="text-purple-100">Event Engagement Rate</div>
             </div>
           </div>
         </div>

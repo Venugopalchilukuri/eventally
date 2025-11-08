@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { sendEmail, getEventReminderEmail } from '@/lib/email';
+
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+    }
+  });
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient();
     // Verify cron secret for security (optional but recommended)
     const authHeader = request.headers.get('authorization');
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -101,6 +112,7 @@ export async function GET(request: NextRequest) {
       // Send reminder to each registered user
       let emailsSentForEvent = 0;
       for (const registration of registrations) {
+        
         const userName = registration.user_email.split('@')[0];
         
         const emailHtml = getEventReminderEmail(
@@ -125,11 +137,11 @@ export async function GET(request: NextRequest) {
           totalEmailsSent++;
           console.log(`    ✅ Sent reminder to ${registration.user_email}`);
         } else {
-          console.error(`    ❌ Failed to send to ${registration.user_email}:`, result.error);
+          console.error(`    ❌ Failed to send to ${registration.user_email}:`, (result as any).error);
         }
 
-        // Small delay to avoid rate limits (100ms)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Delay to avoid rate limits (600ms for 2 emails/sec)
+        await new Promise(resolve => setTimeout(resolve, 600));
       }
 
       results.push({

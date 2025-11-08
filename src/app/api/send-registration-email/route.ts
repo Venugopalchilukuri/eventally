@@ -50,14 +50,20 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error('Failed to send email:', result.error);
-      return NextResponse.json(
-        { error: 'Failed to send email', details: result.error },
-        { status: 500 }
-      );
+      console.error('⚠️ Email failed (but registration succeeded):', (result as any).error);
+      // Don't fail registration even if email fails
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Registration successful (email sending failed)',
+        emailSent: false 
+      });
     }
 
-    return NextResponse.json({ success: true, message: 'Email sent successfully' });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Email sent successfully',
+      emailSent: true 
+    });
   } catch (error: any) {
     console.error('Error in send-registration-email:', error);
     return NextResponse.json(

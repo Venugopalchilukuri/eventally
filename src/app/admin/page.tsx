@@ -22,6 +22,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalEvents: 0,
     totalUsers: 0,
+    totalRegistrations: 0,
+    todayRegistrations: 0,
     eventsByCategory: {} as Record<string, number>,
   });
 
@@ -49,7 +51,7 @@ export default function AdminDashboard() {
   }
 
   async function loadDashboardData() {
-    await Promise.all([loadEvents(), loadProfiles()]);
+    await Promise.all([loadEvents(), loadProfiles(), loadRegistrations()]);
   }
 
   async function loadEvents() {
@@ -86,6 +88,69 @@ export default function AdminDashboard() {
       ...prev,
       totalUsers: profilesData.length,
     }));
+  }
+
+  async function loadRegistrations() {
+    try {
+      // Get total registrations (count only, more efficient)
+      const { count: totalCount, error: totalError } = await supabase
+        .from("registrations")
+        .select("*", { count: 'exact', head: true });
+
+      if (totalError) {
+        console.error("Error loading total registrations:", totalError);
+        // Set to 0 if there's an error
+        setStats((prev) => ({
+          ...prev,
+          totalRegistrations: 0,
+          todayRegistrations: 0,
+        }));
+        return;
+      }
+
+      // Get today's registrations
+      // Try both 'registered_at' and 'created_at' field names
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString();
+
+      // First try with 'registered_at' (more common in registrations table)
+      let { count: todayCount, error: todayError } = await supabase
+        .from("registrations")
+        .select("*", { count: 'exact', head: true })
+        .gte("registered_at", todayISO);
+
+      // If that fails, try with 'created_at'
+      if (todayError) {
+        const result = await supabase
+          .from("registrations")
+          .select("*", { count: 'exact', head: true })
+          .gte("created_at", todayISO);
+        
+        todayCount = result.count;
+        todayError = result.error;
+      }
+
+      if (todayError) {
+        console.error("Error loading today's registrations:", todayError);
+        // If both failed, just set to 0
+        todayCount = 0;
+      }
+
+      setStats((prev) => ({
+        ...prev,
+        totalRegistrations: totalCount || 0,
+        todayRegistrations: todayCount || 0,
+      }));
+    } catch (err) {
+      console.error("Error loading registrations:", err);
+      // Gracefully handle error - show 0
+      setStats((prev) => ({
+        ...prev,
+        totalRegistrations: 0,
+        todayRegistrations: 0,
+      }));
+    }
   }
 
   async function deleteEvent(eventId: string) {
@@ -197,7 +262,7 @@ export default function AdminDashboard() {
         {activeTab === "overview" && (
           <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -233,14 +298,31 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Categories</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Registrations</p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                      {Object.keys(stats.eventsByCategory).length}
+                      {stats.totalRegistrations}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">Today's Activity</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                      {stats.todayRegistrations}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">new registrations</p>
+                  </div>
+                  <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
                 </div>

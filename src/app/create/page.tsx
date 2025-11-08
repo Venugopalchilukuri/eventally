@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import { checkIsAdmin } from "@/lib/admin";
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -24,11 +25,18 @@ export default function CreateEventPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!user) {
       router.push("/login");
+    } else {
+      // Check if user is admin
+      checkIsAdmin(user.id).then(admin => {
+        console.log('🔍 DEBUG - Is Admin:', admin, 'User ID:', user.id);
+        setIsAdmin(admin);
+      });
     }
   }, [user, router]);
 
@@ -78,6 +86,42 @@ export default function CreateEventPage() {
 
       if (supabaseError) {
         throw supabaseError;
+      }
+
+      // If admin created the event, send notifications to all registered users
+      console.log('🔍 DEBUG - Checking notification trigger:', { isAdmin, hasData: !!data, dataLength: data?.length });
+      
+      if (isAdmin && data && data.length > 0) {
+        const createdEvent = data[0];
+        console.log('✅ Admin check passed - Sending notifications for event:', createdEvent.id);
+        
+        // Send notifications asynchronously (don't wait for it to complete)
+        fetch('/api/send-new-event-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventTitle: formData.title,
+            eventDate: formData.date,
+            eventTime: formData.time,
+            eventLocation: formData.location,
+            eventDescription: formData.description,
+            eventCategory: formData.category,
+            eventId: createdEvent.id,
+          }),
+        })
+        .then(response => response.json())
+        .then(result => {
+          console.log('📧 Email notifications sent:', result);
+        })
+        .catch(error => {
+          console.error('❌ Failed to send notifications:', error);
+          // Don't fail event creation if email fails
+        });
+      } else {
+        console.log('⚠️ Notification not triggered - Reason:', 
+          !isAdmin ? 'Not admin' : !data ? 'No data' : 'Data length is 0');
       }
 
       alert(mode === 'import' ? "Event imported successfully! 🎉" : "Event created successfully! 🎉");

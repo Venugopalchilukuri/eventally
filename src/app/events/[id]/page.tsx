@@ -16,6 +16,8 @@ import type { Event } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import AddToCalendarButton from "@/components/AddToCalendarButton";
 import SocialShareButtons from "@/components/SocialShareButtons";
+import EventComments from "@/components/EventComments";
+import SimilarEvents from "@/components/SimilarEvents";
 
 const categoryEmojis: Record<string, string> = {
   Technology: "🚀",
@@ -553,6 +555,18 @@ export default function EventDetailsPage() {
                 )}
               </div>
             )}
+
+            {/* Similar Events Recommendations */}
+            <SimilarEvents 
+              currentEventId={eventId}
+              eventCategory={event.category}
+            />
+
+            {/* Event Comments & Q&A Section */}
+            <EventComments 
+              eventId={eventId} 
+              organizerUserId={event.user_id || ''} 
+            />
           </div>
         </div>
       </div>
