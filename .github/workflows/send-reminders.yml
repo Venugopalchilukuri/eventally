@@ -1,0 +1,18 @@
+name: Send Event Reminders
+
+on:
+  schedule:
+    # Runs every day at 3:30 AM UTC (9:00 AM IST)
+    - cron: '30 3 * * *'
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send Event Reminders
+        run: |
+          curl -X POST https://eventally.vercel.app/api/send-event-reminders \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
