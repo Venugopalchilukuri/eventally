@@ -60,7 +60,7 @@ export default function LiveActivityFeed() {
     }
   }
 
-  function getActivityText(activity: Activity): JSX.Element {
+  function getActivityText(activity: Activity): React.ReactElement {
     switch (activity.type) {
       case 'registration':
         return (
