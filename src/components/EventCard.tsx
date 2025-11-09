@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { registerForEvent, unregisterFromEvent, checkIfRegistered } from "@/lib/registrations";
+import { getEventEngagement, toggleEventLike, type EventEngagement } from "@/lib/eventEngagement";
 import type { Event } from "@/lib/supabase";
 import AddToCalendarButton from "./AddToCalendarButton";
 import SocialShareButtons from "./SocialShareButtons";
@@ -30,6 +31,12 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
   const [isRegistered, setIsRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingRegistration, setCheckingRegistration] = useState(true);
+  const [engagement, setEngagement] = useState<EventEngagement>({
+    likesCount: 0,
+    commentsCount: 0,
+    liked: false,
+  });
+  const [likingInProgress, setLikingInProgress] = useState(false);
   
   // Check if this is an external event
   const isExternalEvent = event.description?.includes('📎 Original Event:');
@@ -40,7 +47,13 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
     } else {
       setCheckingRegistration(false);
     }
+    loadEngagement();
   }, [user, event.id]);
+
+  async function loadEngagement() {
+    const stats = await getEventEngagement(event.id, user?.id);
+    setEngagement(stats);
+  }
 
   async function checkRegistrationStatus() {
     if (!user) return;
@@ -108,6 +121,25 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
       alert("Failed to unregister: " + result.error);
     }
     setLoading(false);
+  }
+
+  async function handleLike() {
+    if (!user) {
+      alert("Please log in to like events");
+      return;
+    }
+
+    setLikingInProgress(true);
+    const result = await toggleEventLike(event.id, user.id);
+
+    if (result.success) {
+      setEngagement({
+        ...engagement,
+        liked: result.liked,
+        likesCount: result.likesCount,
+      });
+    }
+    setLikingInProgress(false);
   }
 
   function formatDate(dateString: string) {
@@ -206,6 +238,57 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
               {event.max_attendees && ` / ${event.max_attendees}`} attendees
             </span>
           </div>
+        </div>
+
+        {/* Engagement Section - Likes and Comments */}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-4 text-sm">
+          <button
+            onClick={handleLike}
+            disabled={likingInProgress || !user}
+            className={`flex items-center gap-1.5 transition-all ${
+              engagement.liked
+                ? 'text-red-500 hover:text-red-600'
+                : 'text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-500'
+            } disabled:opacity-50 disabled:cursor-not-allowed group`}
+            title={user ? (engagement.liked ? 'Unlike' : 'Like this event') : 'Login to like'}
+          >
+            <svg
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                engagement.liked ? 'fill-current' : ''
+              }`}
+              fill={engagement.liked ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth={engagement.liked ? 0 : 2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+            <span className="font-medium">{engagement.likesCount}</span>
+          </button>
+
+          <Link
+            href={`/events/${event.id}#comments`}
+            className="flex items-center gap-1.5 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors group"
+          >
+            <svg
+              className="w-5 h-5 transition-transform group-hover:scale-110"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <span className="font-medium">{engagement.commentsCount}</span>
+          </Link>
         </div>
 
         <div className="mt-6 space-y-3">

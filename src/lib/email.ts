@@ -221,7 +221,7 @@ export function getRegistrationConfirmationEmail(
         </p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events/${eventId}" class="button">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-registrations" class="button">
             View Event Details
           </a>
         </center>

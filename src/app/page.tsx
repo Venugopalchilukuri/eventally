@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import RecommendedEvents from "@/components/RecommendedEvents";
+import LiveActivityFeed from "@/components/LiveActivityFeed";
 
 export default function Home() {
   
@@ -132,9 +133,19 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Personalized Recommendations / Trending Events */}
-        <div className="mt-32">
-          <RecommendedEvents />
+        {/* Live Activity + Personalized Recommendations */}
+        <div className="mt-20 sm:mt-32">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* Activity Feed - Compact Sidebar */}
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <LiveActivityFeed />
+            </div>
+            
+            {/* Recommended Events - Main Content */}
+            <div className="lg:col-span-3 order-1 lg:order-2">
+              <RecommendedEvents />
+            </div>
+          </div>
         </div>
 
         {/* Stats Section - Real Data */}
