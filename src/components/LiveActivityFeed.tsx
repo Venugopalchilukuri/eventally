@@ -32,10 +32,13 @@ export default function LiveActivityFeed() {
       if (data.success) {
         setActivities(data.activities || []);
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching activities:', error);
-      setLoading(false);
+    } finally {
+      // Only set loading to false on first load
+      if (loading) {
+        setLoading(false);
+      }
     }
   }
 

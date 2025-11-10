@@ -243,9 +243,9 @@ export default function EventsPage() {
           </div>
         )}
 
-        {/* Smart Recommendations */}
+        {/* Smart Recommendations - Exclude already displayed events */}
         <div className="mt-16">
-          <RecommendedEvents />
+          <RecommendedEvents excludeEventIds={filteredEvents.map(e => e.id)} />
         </div>
       </div>
     </div>

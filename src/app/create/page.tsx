@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { checkIsAdmin } from "@/lib/admin";
+import { uploadEventImage, validateImageFile } from "@/lib/imageUpload";
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -23,6 +24,9 @@ export default function CreateEventPage() {
     maxAttendees: "",
     imageUrl: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -50,6 +54,36 @@ export default function CreateEventPage() {
     return 'External';
   }
 
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error || '');
+      return;
+    }
+
+    setImageFile(file);
+    setError('');
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData({ ...formData, imageUrl: '' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,6 +96,21 @@ export default function CreateEventPage() {
     }
 
     try {
+      let imageUrl = formData.imageUrl;
+
+      // Upload image if file is selected
+      if (imageFile) {
+        setUploadingImage(true);
+        const uploadResult = await uploadEventImage(imageFile, user.id);
+        setUploadingImage(false);
+
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error || 'Failed to upload image');
+        }
+
+        imageUrl = uploadResult.url || '';
+      }
+
       // For imported events, add external URL to description
       const description = mode === 'import' && externalUrl
         ? `${formData.description}\n\n📎 Original Event: ${externalUrl}`
@@ -78,7 +127,7 @@ export default function CreateEventPage() {
             location: formData.location,
             category: formData.category,
             max_attendees: formData.maxAttendees ? parseInt(formData.maxAttendees) : null,
-            image_url: formData.imageUrl || null,
+            image_url: imageUrl || null,
             user_id: user.id,
           },
         ])
@@ -286,23 +335,72 @@ export default function CreateEventPage() {
             />
           </div>
 
-          {/* Image URL */}
+          {/* Event Image Upload */}
           <div>
-            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Event Image URL (Optional)
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Event Image (Optional)
             </label>
-            <input
-              type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              placeholder="https://example.com/image.jpg"
-            />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Add a URL to an image for your event (e.g., from Unsplash, Imgur)
-            </p>
+            
+            {!imagePreview ? (
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-purple-500 transition-colors">
+                <div className="space-y-1 text-center">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    stroke="currentColor"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                    <label
+                      htmlFor="image-upload"
+                      className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500"
+                    >
+                      <span className="px-2">Upload a file</span>
+                      <input
+                        id="image-upload"
+                        name="image-upload"
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                        onChange={handleImageChange}
+                        className="sr-only"
+                      />
+                    </label>
+                    <p className="pl-1">or drag and drop</p>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    PNG, JPG, GIF, WebP up to 5MB
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  ✓ Image selected: {imageFile?.name}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Category and Max Attendees */}

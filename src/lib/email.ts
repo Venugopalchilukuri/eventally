@@ -8,6 +8,22 @@ interface EmailParams {
   html: string;
 }
 
+// Helper function to get the app base URL
+function getAppUrl(): string {
+  // 1. Try environment variable (production/staging)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  // 2. Try Vercel URL (automatically set by Vercel)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // 3. Default to localhost for development
+  return 'http://localhost:3000';
+}
+
 // Gmail SMTP option (FREE - no domain needed!)
 async function sendViaGmail({ to, subject, html }: EmailParams) {
   const nodemailer = require('nodemailer');
@@ -221,7 +237,7 @@ export function getRegistrationConfirmationEmail(
         </p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-registrations" class="button">
+          <a href="${getAppUrl()}/events/${eventId}" class="button">
             View Event Details
           </a>
         </center>
@@ -232,7 +248,7 @@ export function getRegistrationConfirmationEmail(
         
         <div class="footer">
           <p>You received this email because you registered for an event on Eventally.</p>
-          <p>Need to make changes? <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-registrations" style="color: #9333ea;">Manage your registrations</a></p>
+          <p>Need to make changes? <a href="${getAppUrl()}/my-registrations" style="color: #9333ea;">Manage your registrations</a></p>
         </div>
       </div>
     </body>
@@ -386,7 +402,7 @@ export function getEventReminderEmail(
         ` : ''}
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events/${eventId}" class="button">
+          <a href="${getAppUrl()}/events/${eventId}" class="button">
             View Full Details
           </a>
         </center>
@@ -402,7 +418,7 @@ export function getEventReminderEmail(
         
         <div class="footer">
           <p>See you there! 🎉</p>
-          <p>Need to cancel? <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-registrations" style="color: #9333ea;">Manage your registrations</a></p>
+          <p>Need to cancel? <a href="${getAppUrl()}/my-registrations" style="color: #9333ea;">Manage your registrations</a></p>
         </div>
       </div>
     </body>
@@ -444,7 +460,7 @@ export function getEventCancellationEmail(
         <p>You've successfully unregistered from <strong>${eventTitle}</strong>.</p>
         <p>You can always browse and register for other events on Eventally.</p>
         <p style="margin-top: 30px; color: #6b7280;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events" style="color: #9333ea;">Browse Events</a>
+          <a href="${getAppUrl()}/events" style="color: #9333ea;">Browse Events</a>
         </p>
       </div>
     </body>
@@ -598,7 +614,7 @@ export function getNewEventCreatedEmail(
         </p>
         
         <center>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events/${eventId}" class="button">
+          <a href="${getAppUrl()}/events/${eventId}" class="button">
             View Event & Register
           </a>
         </center>
@@ -609,7 +625,7 @@ export function getNewEventCreatedEmail(
         
         <div class="footer">
           <p>You received this email because you're a registered member of Eventally.</p>
-          <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events" style="color: #9333ea;">Browse All Events</a> | <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings/profile" style="color: #9333ea;">Manage Preferences</a></p>
+          <p><a href="${getAppUrl()}/events" style="color: #9333ea;">Browse All Events</a> | <a href="${getAppUrl()}/settings/profile" style="color: #9333ea;">Manage Preferences</a></p>
         </div>
       </div>
     </body>

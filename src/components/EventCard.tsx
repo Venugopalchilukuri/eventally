@@ -51,8 +51,14 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
   }, [user, event.id]);
 
   async function loadEngagement() {
-    const stats = await getEventEngagement(event.id, user?.id);
-    setEngagement(stats);
+    try {
+      const stats = await getEventEngagement(event.id, user?.id);
+      if (stats) {
+        setEngagement(stats);
+      }
+    } catch (error) {
+      console.error('Error loading engagement:', error);
+    }
   }
 
   async function checkRegistrationStatus() {

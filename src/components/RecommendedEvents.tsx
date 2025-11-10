@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRecommendationsForUser, getTrendingEvents } from '@/lib/recommendations';
 import type { Event } from '@/lib/supabase';
@@ -24,36 +24,51 @@ interface User {
   id: string;
 }
 
-export default function RecommendedEvents() {
+interface RecommendedEventsProps {
+  excludeEventIds?: string[];
+}
+
+export default function RecommendedEvents({ excludeEventIds = [] }: RecommendedEventsProps) {
   const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<RecommendationWithScore[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Stabilize excludeEventIds to prevent unnecessary re-renders
+  const stableExcludeIds = useMemo(() => excludeEventIds, [JSON.stringify(excludeEventIds)]);
+
   useEffect(() => {
     loadRecommendations();
-  }, [user]);
+  }, [user, stableExcludeIds]);
 
   async function loadRecommendations() {
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not on refresh
+      if (recommendations.length === 0) {
+        setLoading(true);
+      }
 
       if (user) {
-        // Get personalized recommendations for logged-in users
-        const recs = await getRecommendationsForUser(user.id, 6);
-        setRecommendations(recs);
+        // Get personalized recommendations for logged-in users (excluding already displayed events)
+        const recs = await getRecommendationsForUser(user.id, 6, stableExcludeIds);
+        setRecommendations(recs || []);
       } else {
-        // Show trending events for guests to create interest
-        const trending = await getTrendingEvents(6);
-        const trendingWithScores = trending.map(event => ({
-          event,
-          score: event.current_attendees,
-          matchPercentage: 75,
-          reason: 'Trending event'
-        }));
-        setRecommendations(trendingWithScores);
+        // Show trending events for guests to create interest (excluding already displayed events)
+        const trending = await getTrendingEvents(6, stableExcludeIds);
+        if (trending && trending.length > 0) {
+          const trendingWithScores = trending.map(event => ({
+            event,
+            score: event.current_attendees || 0,
+            matchPercentage: 75,
+            reason: 'Trending event'
+          }));
+          setRecommendations(trendingWithScores);
+        } else {
+          setRecommendations([]);
+        }
       }
     } catch (error) {
       console.error('Error loading recommendations:', error);
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }

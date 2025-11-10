@@ -14,7 +14,8 @@ interface RecommendationScore {
  */
 export async function getRecommendationsForUser(
   userId: string,
-  limit: number = 6
+  limit: number = 6,
+  excludeEventIds: string[] = []
 ): Promise<RecommendationScore[]> {
   try {
     // Get user's registration history
@@ -41,14 +42,21 @@ export async function getRecommendationsForUser(
       ? Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0][0]
       : null;
 
-    // Get all upcoming events (excluding registered ones)
+    // Get all upcoming events (excluding registered ones and already displayed ones)
     const today = new Date().toISOString().split('T')[0];
-    const { data: allEvents } = await supabase
+    const allExcludedIds = [...registeredEventIds, ...excludeEventIds];
+    
+    let query = supabase
       .from('events')
       .select('*')
-      .gte('date', today)
-      .not('id', 'in', `(${registeredEventIds.length > 0 ? registeredEventIds.join(',') : "''"})`)
-      .order('date', { ascending: true });
+      .gte('date', today);
+    
+    // Only add the exclusion filter if there are IDs to exclude
+    if (allExcludedIds.length > 0) {
+      query = query.not('id', 'in', `(${allExcludedIds.join(',')})`);
+    }
+    
+    const { data: allEvents } = await query.order('date', { ascending: true });
 
     if (!allEvents || allEvents.length === 0) {
       return [];
@@ -152,16 +160,28 @@ export async function getSimilarEvents(
 /**
  * Get popular/trending events (for new users with no history)
  */
-export async function getTrendingEvents(limit: number = 6): Promise<Event[]> {
+export async function getTrendingEvents(limit: number = 6, excludeEventIds: string[] = []): Promise<Event[]> {
   try {
     const today = new Date().toISOString().split('T')[0];
     
-    const { data: trending } = await supabase
+    let query = supabase
       .from('events')
       .select('*')
-      .gte('date', today)
+      .gte('date', today);
+    
+    // Exclude already displayed events - only add filter if there are IDs to exclude
+    if (excludeEventIds.length > 0) {
+      query = query.not('id', 'in', `(${excludeEventIds.join(',')})`);
+    }
+    
+    const { data: trending, error } = await query
       .order('current_attendees', { ascending: false })
       .limit(limit);
+
+    if (error) {
+      console.error('Error in getTrendingEvents query:', error);
+      return [];
+    }
 
     return trending || [];
   } catch (error) {
