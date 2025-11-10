@@ -5,10 +5,17 @@ import { createClient } from '@supabase/supabase-js';
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  
+  console.log('🔍 DEBUG - Using service role key:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,
-    }
+      autoRefreshToken: false,
+    },
+    db: {
+      schema: 'public',
+    },
   });
 }
 
@@ -33,13 +40,18 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 DEBUG - Fetching profiles from database...');
     
-    // Fetch all registered users from the profiles table
-    const { data: profiles, error: profilesError } = await supabase
+    // Fetch ALL registered users from the profiles table
+    // Using a high limit to ensure we get all users (default Supabase limit is 1000)
+    // Service role key bypasses RLS, but we'll be explicit about fetching all
+    const { data: profiles, error: profilesError, count } = await supabase
       .from('profiles')
-      .select('email');
+      .select('email', { count: 'exact' })
+      .not('email', 'is', null)
+      .limit(10000); // Set high limit to get all users
     
     console.log('🔍 DEBUG - Profiles query result:', { 
-      profileCount: profiles?.length, 
+      profileCount: profiles?.length,
+      totalCount: count,
       error: profilesError?.message 
     });
 
