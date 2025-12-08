@@ -65,24 +65,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: { message: "Supabase is not configured." } } as any;
     }
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
-    const base = redirectUrl || appUrl || origin;
-    const redirectTo = base ? `${base}/reset-password` : undefined;
 
-    console.log('🔐 Password Reset Request:', {
-      email,
-      redirectTo,
-      appUrl,
-      origin,
-      base
-    });
+    try {
+      // Get the redirect URL - prioritize window.location.origin for client-side
+      const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const base = redirectUrl || origin || appUrl;
+      const redirectTo = base ? `${base}/reset-password` : undefined;
 
-    const { error, data } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      console.log('🔐 Password Reset Request:', {
+        email,
+        redirectTo,
+        appUrl,
+        origin,
+        base
+      });
 
-    console.log('🔐 Password Reset Response:', { error, data });
+      const { error, data } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectTo || undefined,
+      });
 
-    return { error };
+      console.log('🔐 Password Reset Response:', { error, data });
+
+      // Provide more helpful error messages
+      if (error) {
+        console.error('Password reset error details:', error);
+
+        // Check for common error scenarios
+        if (error.message?.toLowerCase().includes('smtp')) {
+          return {
+            error: {
+              message: "Email service is not configured. Please contact support or check Supabase SMTP settings."
+            }
+          };
+        }
+
+        if (error.message?.toLowerCase().includes('user not found')) {
+          return {
+            error: {
+              message: "No account found with this email address. Please sign up first."
+            }
+          };
+        }
+
+        if (error.message?.toLowerCase().includes('rate limit')) {
+          return {
+            error: {
+              message: "Too many requests. Please wait a few minutes and try again."
+            }
+          };
+        }
+      }
+
+      return { error };
+    } catch (err: any) {
+      console.error('Unexpected error in sendPasswordReset:', err);
+      return {
+        error: {
+          message: err.message || "An unexpected error occurred. Please try again."
+        }
+      };
+    }
   };
 
   const updatePassword = async (newPassword: string) => {

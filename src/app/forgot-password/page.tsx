@@ -27,16 +27,16 @@ export default function ForgotPasswordPage() {
 
         if (error) {
           console.error('Password reset error:', error);
-          // Provide more helpful error messages
-          if (error.message?.includes('User not found')) {
-            setError("No account found with this email address. Please sign up first.");
-          } else if (error.message?.includes('rate limit')) {
-            setError("Too many requests. Please wait a few minutes and try again.");
-          } else {
-            setError(error.message || "Failed to send reset email. Please check your email address and try again.");
-          }
+
+          // Display the error message from the auth context
+          setError(error.message || "Failed to send reset email. Please try again.");
         } else {
-          setSuccess("Check your email for the reset link.");
+          setSuccess(
+            "Check your email for the reset link. If you don't see it, check your spam folder. " +
+            "The email will come from noreply@mail.app.supabase.io or your configured SMTP sender."
+          );
+          // Clear the email field after successful submission
+          setEmail("");
         }
       }
     } catch (err: any) {
