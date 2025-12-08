@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { checkIsAdmin } from "@/lib/admin";
 
 export default function LoginPage() {
@@ -61,6 +62,13 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          {!isSupabaseConfigured && (
+            <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                Configuration required: set <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>.
+              </p>
+            </div>
+          )}
           {error && (
             <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
@@ -104,6 +112,11 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 placeholder="••••••••"
               />
+              <div className="mt-2 text-center">
+                <Link href="/forgot-password" className="text-sm font-semibold text-purple-600 dark:text-purple-400 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <button
@@ -113,6 +126,7 @@ export default function LoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
+            {/* Removed duplicate actions; single link above suffices */}
           </form>
 
           <div className="mt-6 text-center">

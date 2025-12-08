@@ -1,18 +1,20 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Lazy initialization to avoid build-time errors
 let supabaseClient: SupabaseClient | null = null;
+
+export const isSupabaseConfigured = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 function getSupabaseClient() {
   if (!supabaseClient) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
-      // Return a dummy client during build time
       return createClient('https://placeholder.supabase.co', 'placeholder-key');
     }
-    
+
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
   }
   return supabaseClient;
