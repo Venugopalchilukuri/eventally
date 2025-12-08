@@ -12,7 +12,7 @@ import { uploadEventImage, validateImageFile } from "@/lib/imageUpload";
 export default function CreateEventPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [mode, setMode] = useState<'create' | 'import'>('import');
+  const [mode, setMode] = useState<'create' | 'import'>('create');
   const [externalUrl, setExternalUrl] = useState("");
   const [formData, setFormData] = useState({
     title: "",
@@ -30,6 +30,9 @@ export default function CreateEventPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const todayLocal = new Date();
+  const todayStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -96,6 +99,11 @@ export default function CreateEventPage() {
     }
 
     try {
+      if (formData.date < todayStr) {
+        setError("Date cannot be in the past");
+        setLoading(false);
+        return;
+      }
       let imageUrl = formData.imageUrl;
 
       // Upload image if file is selected
@@ -139,11 +147,11 @@ export default function CreateEventPage() {
 
       // If admin created the event, send notifications to all registered users
       console.log('🔍 DEBUG - Checking notification trigger:', { isAdmin, hasData: !!data, dataLength: data?.length });
-      
+
       if (isAdmin && data && data.length > 0) {
         const createdEvent = data[0];
         console.log('✅ Admin check passed - Sending notifications for event:', createdEvent.id);
-        
+
         // Send notifications asynchronously (don't wait for it to complete)
         fetch('/api/send-new-event-notification', {
           method: 'POST',
@@ -160,16 +168,16 @@ export default function CreateEventPage() {
             eventId: createdEvent.id,
           }),
         })
-        .then(response => response.json())
-        .then(result => {
-          console.log('📧 Email notifications sent:', result);
-        })
-        .catch(error => {
-          console.error('❌ Failed to send notifications:', error);
-          // Don't fail event creation if email fails
-        });
+          .then(response => response.json())
+          .then(result => {
+            console.log('📧 Email notifications sent:', result);
+          })
+          .catch(error => {
+            console.error('❌ Failed to send notifications:', error);
+            // Don't fail event creation if email fails
+          });
       } else {
-        console.log('⚠️ Notification not triggered - Reason:', 
+        console.log('⚠️ Notification not triggered - Reason:',
           !isAdmin ? 'Not admin' : !data ? 'No data' : 'Data length is 0');
       }
 
@@ -201,12 +209,18 @@ export default function CreateEventPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-4">Import External Event</h1>
+          <h1 className="text-4xl font-bold mb-4">
+            {mode === 'create' ? 'Create New Event' : 'Import External Event'}
+          </h1>
           <p className="text-xl text-purple-100">
-            Import events from external platforms
+            {mode === 'create'
+              ? 'Create and manage your own events on Eventally'
+              : 'Import events from external platforms'
+            }
           </p>
         </div>
       </div>
+
 
       {/* Form */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -216,18 +230,33 @@ export default function CreateEventPage() {
           </div>
         )}
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 space-y-6">
-          {/* Mode Toggle - Only Import */}
+          {/* Mode Toggle - Create or Import */}
           <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
             <button
               type="button"
-              className="flex-1 px-4 py-3 rounded-lg font-semibold bg-purple-600 text-white shadow-md cursor-default"
+              onClick={() => setMode('create')}
+              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${mode === 'create'
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+            >
+              ✏️ Create New Event
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('import')}
+              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${mode === 'import'
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
             >
               📎 Import External Event
             </button>
           </div>
 
+
           {/* Import Mode - External URL */}
-          {
+          {mode === 'import' && (
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <label htmlFor="externalUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 External Event URL *
@@ -250,7 +279,7 @@ export default function CreateEventPage() {
                 This URL will be saved and users will be directed to register on the original platform
               </p>
             </div>
-          }
+          )}
 
           {/* Event Title */}
           <div>
@@ -299,6 +328,7 @@ export default function CreateEventPage() {
                 required
                 value={formData.date}
                 onChange={handleChange}
+                min={todayStr}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -340,7 +370,7 @@ export default function CreateEventPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Event Image (Optional)
             </label>
-            
+
             {!imagePreview ? (
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-purple-500 transition-colors">
                 <div className="space-y-1 text-center">
@@ -451,7 +481,10 @@ export default function CreateEventPage() {
               disabled={loading}
               className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Creating..." : "Create Event"}
+              {loading
+                ? (mode === 'create' ? 'Creating...' : 'Importing...')
+                : (mode === 'create' ? 'Create Event' : 'Import Event')
+              }
             </button>
             <Link
               href="/events"
