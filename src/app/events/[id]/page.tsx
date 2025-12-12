@@ -256,11 +256,12 @@ export default function EventDetailsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
           {/* Hero Image */}
           {event.image_url ? (
-            <div className="h-96 overflow-hidden relative">
+            <div className="relative bg-gray-100 dark:bg-gray-700 flex items-center justify-center p-6" style={{ minHeight: '400px', maxHeight: '600px' }}>
               <img
                 src={event.image_url}
                 alt={event.title}
-                className="w-full h-full object-cover"
+                className="max-w-full max-h-full object-contain"
+                style={{ width: 'auto', height: 'auto', maxHeight: '550px' }}
                 onError={(e) => {
                   // Fallback to gradient if image fails
                   e.currentTarget.style.display = 'none';

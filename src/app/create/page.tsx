@@ -413,11 +413,11 @@ export default function CreateEventPage() {
                 </div>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg">
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-64 object-contain rounded-lg"
                 />
                 <button
                   type="button"
