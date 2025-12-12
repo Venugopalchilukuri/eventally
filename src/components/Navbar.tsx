@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { checkIsAdmin } from "@/lib/admin";
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
-  const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (user) {
-      checkIsAdmin(user.id).then(setIsAdmin);
+      checkIsAdmin(user.id).then((adminStatus) => {
+        setIsAdmin(adminStatus);
+      });
     } else {
       setIsAdmin(false);
     }
@@ -25,7 +25,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Eventally
+              Eventally ✅ NEW CODE LOADED
             </h1>
           </Link>
           <div className="flex items-center gap-4">

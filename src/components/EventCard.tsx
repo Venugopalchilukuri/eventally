@@ -8,6 +8,8 @@ import { getEventEngagement, toggleEventLike, type EventEngagement } from "@/lib
 import type { Event } from "@/lib/supabase";
 import AddToCalendarButton from "./AddToCalendarButton";
 import SocialShareButtons from "./SocialShareButtons";
+import EventCountdown from "./EventCountdown";
+import EventStatusBadge from "./EventStatusBadge";
 
 interface EventCardProps {
   event: Event;
@@ -37,7 +39,7 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
     liked: false,
   });
   const [likingInProgress, setLikingInProgress] = useState(false);
-  
+
   // Check if this is an external event
   const isExternalEvent = event.description?.includes('📎 Original Event:');
 
@@ -86,7 +88,7 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
     if (result.success) {
       setIsRegistered(true);
       alert("Successfully registered for event! 🎉\nCheck your email for confirmation.");
-      
+
       // Send confirmation email (non-blocking)
       fetch('/api/send-registration-email', {
         method: 'POST',
@@ -101,7 +103,7 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
           eventId: event.id,
         }),
       }).catch(err => console.error('Email notification failed:', err));
-      
+
       onUpdate?.();
     } else {
       alert("Failed to register: " + result.error);
@@ -168,11 +170,11 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
   const isFull = event.max_attendees && event.current_attendees >= event.max_attendees;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden relative">
       {event.image_url ? (
         <div className="h-48 overflow-hidden relative">
-          <img 
-            src={event.image_url} 
+          <img
+            src={event.image_url}
             alt={event.title}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             onError={(e) => {
@@ -193,6 +195,10 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
           <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-sm rounded-full font-medium">
             {event.category}
           </span>
+          {/* Show status badge to event owner */}
+          {user && event.user_id === user.id && (
+            <EventStatusBadge status={event.status} size="sm" />
+          )}
           {isExternalEvent && (
             <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-sm rounded-full font-medium">
               🔗 External
@@ -246,22 +252,30 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
           </div>
         </div>
 
+        {/* Event Countdown Timer */}
+        <div className="mt-4">
+          <EventCountdown
+            eventDate={event.date}
+            eventTime={event.time}
+            size="sm"
+            showLabel={false}
+          />
+        </div>
+
         {/* Engagement Section - Likes and Comments */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-4 text-sm">
           <button
             onClick={handleLike}
             disabled={likingInProgress || !user}
-            className={`flex items-center gap-1.5 transition-all ${
-              engagement.liked
-                ? 'text-red-500 hover:text-red-600'
-                : 'text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-500'
-            } disabled:opacity-50 disabled:cursor-not-allowed group`}
+            className={`flex items-center gap-1.5 transition-all ${engagement.liked
+              ? 'text-red-500 hover:text-red-600'
+              : 'text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-500'
+              } disabled:opacity-50 disabled:cursor-not-allowed group`}
             title={user ? (engagement.liked ? 'Unlike' : 'Like this event') : 'Login to like'}
           >
             <svg
-              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                engagement.liked ? 'fill-current' : ''
-              }`}
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${engagement.liked ? 'fill-current' : ''
+                }`}
               fill={engagement.liked ? 'currentColor' : 'none'}
               stroke="currentColor"
               strokeWidth={engagement.liked ? 0 : 2}
@@ -348,13 +362,12 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
               ) : (
                 <Link
                   href={`/events/${event.id}`}
-                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors text-center block ${
-                    isFull && !isExternalEvent
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : isExternalEvent
+                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors text-center block ${isFull && !isExternalEvent
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : isExternalEvent
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
                       : 'bg-purple-600 text-white hover:bg-purple-700'
-                  }`}
+                    }`}
                 >
                   {isExternalEvent ? "View & Register →" : isFull ? "Event Full" : "Register for Event"}
                 </Link>

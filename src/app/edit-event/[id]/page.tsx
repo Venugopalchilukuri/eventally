@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import EventStatusControl from "@/components/EventStatusControl";
 
 export default function EditEventPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function EditEventPage() {
     category: "Technology",
     maxAttendees: "",
     imageUrl: "",
+    status: "draft" as 'draft' | 'published' | 'cancelled',
   });
   const [loading, setLoading] = useState(false);
   const [fetchingEvent, setFetchingEvent] = useState(true);
@@ -65,6 +67,7 @@ export default function EditEventPage() {
         category: data.category,
         maxAttendees: data.max_attendees ? data.max_attendees.toString() : "",
         imageUrl: data.image_url || "",
+        status: data.status || 'draft',
       });
     } catch (err: any) {
       console.error("Error fetching event:", err);
@@ -97,6 +100,7 @@ export default function EditEventPage() {
           category: formData.category,
           max_attendees: formData.maxAttendees ? parseInt(formData.maxAttendees) : null,
           image_url: formData.imageUrl || null,
+          status: formData.status,
         })
         .eq("id", eventId)
         .eq("user_id", user.id); // Ensure user owns the event
@@ -321,6 +325,17 @@ export default function EditEventPage() {
                 placeholder="Optional"
               />
             </div>
+          </div>
+
+          {/* Event Status Control */}
+          <div>
+            <EventStatusControl
+              eventId={eventId}
+              currentStatus={formData.status}
+              onStatusChange={(newStatus) => {
+                setFormData({ ...formData, status: newStatus });
+              }}
+            />
           </div>
 
           {/* Submit Buttons */}

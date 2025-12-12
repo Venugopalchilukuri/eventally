@@ -23,6 +23,7 @@ export default function CreateEventPage() {
     category: "Technology",
     maxAttendees: "",
     imageUrl: "",
+    status: "draft" as 'draft' | 'published' | 'cancelled',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -137,6 +138,7 @@ export default function CreateEventPage() {
             max_attendees: formData.maxAttendees ? parseInt(formData.maxAttendees) : null,
             image_url: imageUrl || null,
             user_id: user.id,
+            status: formData.status,
           },
         ])
         .select();
@@ -472,6 +474,30 @@ export default function CreateEventPage() {
                 placeholder="Optional"
               />
             </div>
+          </div>
+
+          {/* Event Status */}
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Event Status *
+            </label>
+            <select
+              id="status"
+              name="status"
+              required
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            >
+              <option value="draft">📝 Draft - Save for later, not visible to public</option>
+              <option value="published">✅ Published - Make event live and visible to everyone</option>
+            </select>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {formData.status === 'draft'
+                ? '📝 Draft events are only visible to you. You can publish them later.'
+                : '✅ Published events are immediately visible to all users and searchable.'
+              }
+            </p>
           </div>
 
           {/* Submit Buttons */}

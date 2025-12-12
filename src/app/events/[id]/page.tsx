@@ -5,12 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  registerForEvent, 
-  unregisterFromEvent, 
+import {
+  registerForEvent,
+  unregisterFromEvent,
   checkIfRegistered,
   getEventRegistrations,
-  type Registration 
+  type Registration
 } from "@/lib/registrations";
 import type { Event } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
@@ -18,6 +18,7 @@ import AddToCalendarButton from "@/components/AddToCalendarButton";
 import SocialShareButtons from "@/components/SocialShareButtons";
 import EventComments from "@/components/EventComments";
 import SimilarEvents from "@/components/SimilarEvents";
+import EventCountdown from "@/components/EventCountdown";
 
 const categoryEmojis: Record<string, string> = {
   Technology: "🚀",
@@ -68,7 +69,7 @@ export default function EventDetailsPage() {
 
       if (fetchError) throw fetchError;
       setEvent(data);
-      
+
       // Extract external URL from description if it exists
       const urlMatch = data.description?.match(/📎 Original Event: (https?:\/\/[^\s]+)/);
       if (urlMatch) {
@@ -113,7 +114,7 @@ export default function EventDetailsPage() {
     if (result.success) {
       setIsRegistered(true);
       alert("Successfully registered for event! 🎉\nCheck your email for confirmation.");
-      
+
       // Send confirmation email (non-blocking)
       fetch('/api/send-registration-email', {
         method: 'POST',
@@ -128,7 +129,7 @@ export default function EventDetailsPage() {
           eventId: event.id,
         }),
       }).catch(err => console.error('Email notification failed:', err));
-      
+
       fetchEvent();
       fetchAttendees();
     } else {
@@ -362,6 +363,16 @@ export default function EventDetailsPage() {
               </div>
             </div>
 
+            {/* Event Countdown Timer */}
+            <div className="mb-8">
+              <EventCountdown
+                eventDate={event.date}
+                eventTime={event.time}
+                size="lg"
+                showLabel={true}
+              />
+            </div>
+
             {/* Description */}
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -404,7 +415,7 @@ export default function EventDetailsPage() {
                     </div>
                   </div>
                 )}
-                
+
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   {user ? (isRegistered ? "You're Registered! 🎉" : externalUrl ? "Interested in This Event?" : "Ready to Join?") : "Join This Event"}
                 </h3>
@@ -437,7 +448,7 @@ export default function EventDetailsPage() {
                       </svg>
                     </a>
                   )}
-                  
+
                   {/* Internal Event or Track External */}
                   {user && (
                     isRegistered ? (
@@ -460,7 +471,7 @@ export default function EventDetailsPage() {
                       )
                     )
                   )}
-                  
+
                   {/* Track button for external events */}
                   {externalUrl && user && !isRegistered && (
                     <button
@@ -557,15 +568,15 @@ export default function EventDetailsPage() {
             )}
 
             {/* Similar Events Recommendations */}
-            <SimilarEvents 
+            <SimilarEvents
               currentEventId={eventId}
               eventCategory={event.category}
             />
 
             {/* Event Comments & Q&A Section */}
-            <EventComments 
-              eventId={eventId} 
-              organizerUserId={event.user_id || ''} 
+            <EventComments
+              eventId={eventId}
+              organizerUserId={event.user_id || ''}
             />
           </div>
         </div>

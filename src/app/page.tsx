@@ -8,7 +8,7 @@ import RecommendedEvents from "@/components/RecommendedEvents";
 import LiveActivityFeed from "@/components/LiveActivityFeed";
 
 export default function Home() {
-  
+
   // Real stats from database
   const [stats, setStats] = useState({
     totalEvents: 0,
@@ -22,20 +22,22 @@ export default function Home() {
 
   async function fetchStats() {
     try {
-      // Get total events count
+      // Get total published events count
       const { count: eventsCount } = await supabase
         .from('events')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'published');
 
       // Get total users count
       const { count: usersCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      // Calculate satisfaction rate (events with registrations / total events)
+      // Calculate satisfaction rate (published events with registrations / total published events)
       const { count: eventsWithRegistrations } = await supabase
         .from('events')
         .select('*', { count: 'exact', head: true })
+        .eq('status', 'published')
         .gt('current_attendees', 0);
 
       const satisfactionRate = eventsCount && eventsCount > 0
@@ -67,20 +69,20 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              The all-in-one platform to organize, promote, and manage your events seamlessly. 
+              The all-in-one platform to organize, promote, and manage your events seamlessly.
               From small meetups to large conferences.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/events" 
+            <Link
+              href="/events"
               className="px-8 py-4 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all hover:scale-105 shadow-lg"
             >
               Browse Events
             </Link>
-            <Link 
-              href="/signup" 
+            <Link
+              href="/signup"
               className="px-8 py-4 bg-white text-purple-600 border-2 border-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all hover:scale-105 shadow-lg"
             >
               Get Started
@@ -140,7 +142,7 @@ export default function Home() {
             <div className="lg:col-span-1 order-2 lg:order-1">
               <LiveActivityFeed />
             </div>
-            
+
             {/* Recommended Events - Main Content */}
             <div className="lg:col-span-3 order-1 lg:order-2">
               <RecommendedEvents />

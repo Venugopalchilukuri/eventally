@@ -1,0 +1,24 @@
+﻿======================================================================
+ENVIRONMENT VARIABLE DIAGNOSTIC
+======================================================================
+
+≡ƒôä Method 1: Direct file read
+Total lines: 10
+
+Line 8: GMAIL_USER
+  Raw value: "venugopalchilukuri400@gmail.com"
+  Length: 31
+  Has quotes: false
+
+Line 10: GMAIL_APP_PASSWORD
+  Length: 16
+  Has quotes: false
+  Has spaces: false
+  Preview: qhsw****aacm
+
+≡ƒôè FINAL VALUES (after cleanup):
+  GMAIL_USER: venugopalchilukuri400@gmail.com
+  GMAIL_APP_PASSWORD length: 16
+  Password should be 16 chars: Γ£à YES
+
+======================================================================

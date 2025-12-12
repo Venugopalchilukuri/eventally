@@ -36,6 +36,8 @@ export interface Event {
   image_url?: string;
   created_at: string;
   user_id?: string;
+  status: 'draft' | 'published' | 'cancelled';
+  published_at?: string;
 }
 
 export interface EventInsert {
@@ -48,4 +50,5 @@ export interface EventInsert {
   max_attendees?: number;
   image_url?: string;
   user_id?: string;
+  status?: 'draft' | 'published' | 'cancelled';
 }
