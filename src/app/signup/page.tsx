@@ -44,10 +44,7 @@ export default function SignUpPage() {
     } else {
       setSuccess(true);
       setLoading(false);
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      // Don't auto-redirect - let user read the email confirmation message
     }
   };
 
@@ -82,10 +79,57 @@ export default function SignUpPage() {
           )}
 
           {success && (
-            <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-              <p className="text-green-800 dark:text-green-200 text-sm">
-                Account created successfully! Check your email to confirm. Redirecting to login...
-              </p>
+            <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-green-300 dark:border-green-700 rounded-xl p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <svg className="w-12 h-12 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
+                    ✅ Account Created Successfully!
+                  </h3>
+                  <p className="text-green-700 dark:text-green-300 mb-3 font-medium">
+                    We've sent a confirmation email to:
+                  </p>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 mb-4 border border-green-200 dark:border-green-700">
+                    <p className="text-purple-600 dark:text-purple-400 font-bold text-lg">
+                      📧 {formData.email}
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
+                    <p className="flex items-start gap-2">
+                      <span className="text-green-600 dark:text-green-400 font-bold">1.</span>
+                      <span>Check your email inbox for the confirmation link</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-green-600 dark:text-green-400 font-bold">2.</span>
+                      <span>Click the link to verify your email address</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-green-600 dark:text-green-400 font-bold">3.</span>
+                      <span>After confirmation, you can sign in below</span>
+                    </p>
+                  </div>
+                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                    <p className="text-xs text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span><strong>Didn't receive the email?</strong> Check your spam/junk folder</span>
+                    </p>
+                  </div>
+                  <div className="mt-4">
+                    <Link
+                      href="/login"
+                      className="inline-block w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors text-center"
+                    >
+                      Go to Sign In Page →
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
