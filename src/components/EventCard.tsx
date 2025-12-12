@@ -8,6 +8,7 @@ import { getEventEngagement, toggleEventLike, type EventEngagement } from "@/lib
 import type { Event } from "@/lib/supabase";
 import AddToCalendarButton from "./AddToCalendarButton";
 import SocialShareButtons from "./SocialShareButtons";
+import BookmarkButton from "./BookmarkButton";
 import EventCountdown from "./EventCountdown";
 import EventStatusBadge from "./EventStatusBadge";
 
@@ -168,9 +169,32 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
   }
 
   const isFull = event.max_attendees && event.current_attendees >= event.max_attendees;
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    async function checkAdmin() {
+      if (user) {
+        const { checkIsAdmin } = await import("@/lib/admin");
+        const adminStatus = await checkIsAdmin(user.id);
+        setIsAdmin(adminStatus);
+      }
+    }
+    checkAdmin();
+  }, [user]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden relative">
+      {/* Bookmark Button - Only for non-admin users */}
+      {user && !isAdmin && (
+        <div className="absolute top-3 right-3 z-10">
+          <BookmarkButton
+            eventId={event.id}
+            eventTitle={event.title}
+            size="md"
+            className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg"
+          />
+        </div>
+      )}
       {event.image_url ? (
         <div className="h-48 overflow-hidden relative">
           <img

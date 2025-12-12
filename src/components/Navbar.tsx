@@ -32,12 +32,34 @@ export default function Navbar() {
             {user ? (
               <>
                 {!isAdmin && (
-                  <Link
-                    href="/dashboard"
-                    className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
-                  >
-                    Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/saved-events"
+                      className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                      title="Saved Events"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">Saved</span>
+                    </Link>
+                  </>
                 )}
                 {isAdmin && (
                   <>
