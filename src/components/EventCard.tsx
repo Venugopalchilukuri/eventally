@@ -185,7 +185,7 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
   }, [user]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden relative">
+    <div className="group bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden relative transform hover:-translate-y-2 hover:scale-[1.02] cursor-pointer border-2 border-transparent hover:border-purple-500/20 dark:hover:border-purple-400/20">
       {/* Bookmark Button - Only for non-admin users */}
       {user && !isAdmin && (
         <div className="absolute top-3 right-3 z-10">
@@ -199,14 +199,17 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
       )}
       {event.image_url ? (
         <div
-          className="relative bg-gray-100 dark:bg-gray-700 w-full flex items-center justify-center p-3 cursor-pointer group overflow-hidden"
+          className="relative bg-gray-100 dark:bg-gray-700 w-full flex items-center justify-center p-3 cursor-pointer overflow-hidden"
           style={{ minHeight: '220px', maxHeight: '260px' }}
           onClick={() => setShowImageModal(true)}
         >
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+
           <img
             src={event.image_url}
             alt={event.title}
-            className="max-w-full max-h-full object-contain transition-transform group-hover:scale-105"
+            className="max-w-full max-h-full object-contain transition-all duration-500 group-hover:scale-110"
             style={{ width: 'auto', height: 'auto' }}
             onError={(e) => {
               // Fallback to gradient if image fails to load
@@ -217,8 +220,8 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
             }}
           />
           {/* Click hint overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-lg">
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center z-20">
+            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 bg-white/95 dark:bg-gray-800/95 px-4 py-2 rounded-lg backdrop-blur-sm shadow-xl">
               <span className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -229,36 +232,38 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-8xl" style={{ minHeight: '240px' }}>
-          {categoryEmojis[event.category] || "🎯"}
+        <div className="bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-8xl transition-all duration-300 group-hover:from-purple-600 group-hover:to-blue-600" style={{ minHeight: '240px' }}>
+          <span className="transform transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12">
+            {categoryEmojis[event.category] || "🎯"}
+          </span>
         </div>
       )}
       <div className="p-6">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-sm rounded-full font-medium">
-            {event.category}
+          <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-sm rounded-full font-medium transition-all duration-300 hover:scale-110 hover:shadow-lg hover:bg-purple-200 dark:hover:bg-purple-800 cursor-default">
+            {categoryEmojis[event.category]} {event.category}
           </span>
           {/* Show status badge to event owner */}
           {user && event.user_id === user.id && (
             <EventStatusBadge status={event.status} size="sm" />
           )}
           {isExternalEvent && (
-            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-sm rounded-full font-medium">
+            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-sm rounded-full font-medium transition-all duration-300 hover:scale-110 hover:shadow-lg animate-pulse">
               🔗 External
             </span>
           )}
           {isRegistered && (
-            <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 text-sm rounded-full font-medium">
+            <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 text-sm rounded-full font-medium transition-all duration-300 hover:scale-110 hover:shadow-lg">
               ✓ {isExternalEvent ? 'Tracking' : 'Registered'}
             </span>
           )}
           {isFull && !isExternalEvent && (
-            <span className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-sm rounded-full font-medium">
+            <span className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-sm rounded-full font-medium transition-all duration-300 hover:scale-110 hover:shadow-lg animate-pulse">
               Full
             </span>
           )}
         </div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 transition-all duration-300 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-blue-600">
           {event.title}
         </h3>
         <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
@@ -358,7 +363,7 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
           <div className="flex gap-2">
             <Link
               href={`/events/${event.id}`}
-              className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-center"
+              className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 text-center transform hover:scale-105 hover:shadow-lg"
             >
               View Details
             </Link>
@@ -398,18 +403,18 @@ export default function EventCard({ event, onUpdate, showActions = true }: Event
                 <button
                   onClick={handleUnregister}
                   disabled={loading}
-                  className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                  className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all duration-300 disabled:opacity-50 transform hover:scale-105 hover:shadow-xl hover:shadow-red-500/50"
                 >
                   {loading ? "Unregistering..." : "Unregister"}
                 </button>
               ) : (
                 <Link
                   href={`/events/${event.id}`}
-                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors text-center block ${isFull && !isExternalEvent
+                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-center block transform hover:scale-105 hover:shadow-xl ${isFull && !isExternalEvent
                     ? 'bg-gray-400 text-white cursor-not-allowed'
                     : isExternalEvent
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
-                      : 'bg-purple-600 text-white hover:bg-purple-700'
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:shadow-purple-500/50'
+                      : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 hover:shadow-purple-500/50'
                     }`}
                 >
                   {isExternalEvent ? "View & Register →" : isFull ? "Event Full" : "Register for Event"}
