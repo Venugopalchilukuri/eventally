@@ -63,13 +63,13 @@ export default function Home() {
         <div className="text-center space-y-8">
           <div className="space-y-4">
             <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white">
-              Create & Manage
+              Discover & Join
               <span className="block bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Amazing Events
               </span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              The all-in-one platform to organize, promote, and manage your events seamlessly.
+              Your gateway to exciting events! Browse, register, and connect with amazing experiences.
               From small meetups to large conferences.
             </p>
           </div>
@@ -99,10 +99,10 @@ export default function Home() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Easy Scheduling
+              Easy Discovery
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Create and schedule events in minutes with our intuitive interface. Set dates, times, and locations effortlessly.
+              Browse and discover events that match your interests. Filter by date, category, and location to find the perfect event.
             </p>
           </div>
 
@@ -113,10 +113,10 @@ export default function Home() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Attendee Management
+              Simple Registration
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Track RSVPs, manage guest lists, and communicate with attendees all in one place.
+              Register for events with just a few clicks. Get instant confirmations and manage your event registrations easily.
             </p>
           </div>
 
@@ -127,10 +127,10 @@ export default function Home() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Analytics & Insights
+              Track Your Events
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Get detailed analytics on event performance, attendance rates, and engagement metrics.
+              Keep track of all your registered events in one place. Get reminders and updates about upcoming events.
             </p>
           </div>
         </div>
